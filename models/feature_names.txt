@@ -1,0 +1,13 @@
+Engine rpm
+Lub oil pressure
+Fuel pressure
+Coolant pressure
+lub oil temp
+Coolant temp
+Temp_Difference
+Avg_Temperature
+Pressure_Difference
+Pressure_Ratio
+Avg_Pressure
+RPM_FuelPressure
+RPM_CoolantTemp
