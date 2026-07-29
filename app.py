@@ -3,10 +3,13 @@ import json
 import joblib
 import pandas as pd
 import streamlit as st
+from huggingface_hub import hf_hub_download
 
 st.set_page_config(page_title="Engine Condition Prediction", layout="wide")
 st.title("Engine Condition Prediction App")
 st.write("Enter the feature values below and click Predict.")
+
+REPO_ID = "Swetha1929/predictive-maintenance-engine-model"
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 MODELS_DIR = os.path.join(BASE_DIR, "models")
@@ -17,19 +20,23 @@ INFO_FILE = os.path.join(MODELS_DIR, "model_info.json")
 
 @st.cache_resource
 def load_artifacts():
-    if not os.path.exists(MODEL_FILE):
-        raise FileNotFoundError(f"Missing model file: {MODEL_FILE}")
-    if not os.path.exists(FEATURE_FILE):
-        raise FileNotFoundError(f"Missing feature file: {FEATURE_FILE}")
+    try:
+        model_path = hf_hub_download(repo_id=REPO_ID, filename="best_model.pkl")
+        feature_path = hf_hub_download(repo_id=REPO_ID, filename="feature_names.txt")
+        info_path = hf_hub_download(repo_id=REPO_ID, filename="model_info.json")
+    except Exception:
+        model_path = MODEL_FILE
+        feature_path = FEATURE_FILE
+        info_path = INFO_FILE
 
-    model = joblib.load(MODEL_FILE)
+    model = joblib.load(model_path)
 
-    with open(FEATURE_FILE, "r", encoding="utf-8") as f:
+    with open(feature_path, "r", encoding="utf-8") as f:
         feature_names = [line.strip() for line in f if line.strip()]
 
     model_info = {}
-    if os.path.exists(INFO_FILE):
-        with open(INFO_FILE, "r", encoding="utf-8") as f:
+    if os.path.exists(info_path):
+        with open(info_path, "r", encoding="utf-8") as f:
             model_info = json.load(f)
 
     return model, feature_names, model_info
@@ -37,7 +44,7 @@ def load_artifacts():
 try:
     model, feature_names, model_info = load_artifacts()
 except Exception as e:
-    st.error(str(e))
+    st.error(f"Error loading artifacts: {e}")
     st.stop()
 
 if model_info:
