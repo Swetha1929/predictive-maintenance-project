@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,9 +26,19 @@ jobs:
       - name: Validate Streamlit App
         run: python -m py_compile app.py
 
-      - name: Sync to Hugging Face Space
-        uses: huggingface/hub-sync@v0.1.0
-        with:
-          github_repo_id: ${{ github.repository }}
-          huggingface_repo_id: Swetha1929/maintenance-engine
-          hf_token: ${{ secrets.HF_TOKEN }}
+      - name: Push to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "github-actions@github.com"
+
+          rm -rf hf-space
+          git clone https://user:${HF_TOKEN}@huggingface.co/spaces/Swetha1929/maintenance-engine hf-space
+
+          rsync -av --delete --exclude='.git' --exclude='.github' ./ hf-space/
+
+          cd hf-space
+          git add .
+          git commit -m "Deploy from GitHub Actions" || true
+          git push
