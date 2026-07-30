@@ -6,11 +6,14 @@ on:
       - main
 
 jobs:
-  deploy:
+
+  build:
+
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up Python
@@ -18,33 +21,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Validate Streamlit App
         run: python -m py_compile app.py
-
-      - name: Push to Hugging Face Space
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          set -e
-          git config --global user.name "github-actions"
-          git config --global user.email "github-actions@github.com"
-
-          rm -rf /tmp/hf-space
-          git clone "https://user:${HF_TOKEN}@huggingface.co/spaces/Swetha1929/maintenance-engine" /tmp/hf-space
-
-          find /tmp/hf-space -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
-
-          cp README.md /tmp/hf-space/
-          cp Dockerfile /tmp/hf-space/
-          cp app.py /tmp/hf-space/
-          cp requirements.txt /tmp/hf-space/
-
-          cd /tmp/hf-space
-          git add -A
-          git commit -m "Deploy from GitHub Actions" || true
-          git push
