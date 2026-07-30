@@ -40,10 +40,13 @@ jobs:
           rsync -av --delete \
             --exclude '.git' \
             --exclude '.github' \
-            --exclude 'hf-space' \
-            --exclude '__pycache__' \
-            --exclude '.ipynb_checkpoints' \
-            --exclude '*.pyc' \
+            --exclude 'Data/' \
+            --exclude 'models/' \
+            --exclude '__pycache__/' \
+            --exclude '.ipynb_checkpoints/' \
+            --exclude '*.ipynb' \
+            --exclude '*.pkl' \
+            --exclude '*.db' \
             ./ /tmp/hf-space/
 
           cd /tmp/hf-space
