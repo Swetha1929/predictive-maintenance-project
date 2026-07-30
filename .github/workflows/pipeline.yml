@@ -37,17 +37,12 @@ jobs:
           rm -rf /tmp/hf-space
           git clone "https://user:${HF_TOKEN}@huggingface.co/spaces/Swetha1929/maintenance-engine" /tmp/hf-space
 
-          rsync -av --delete \
-            --exclude '.git' \
-            --exclude '.github' \
-            --exclude 'Data/' \
-            --exclude 'models/' \
-            --exclude '__pycache__/' \
-            --exclude '.ipynb_checkpoints/' \
-            --exclude '*.ipynb' \
-            --exclude '*.pkl' \
-            --exclude '*.db' \
-            ./ /tmp/hf-space/
+          find /tmp/hf-space -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+
+          cp README.md /tmp/hf-space/
+          cp Dockerfile /tmp/hf-space/
+          cp app.py /tmp/hf-space/
+          cp requirements.txt /tmp/hf-space/
 
           cd /tmp/hf-space
           git add -A
