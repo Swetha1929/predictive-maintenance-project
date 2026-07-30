@@ -11,4 +11,4 @@ pinned: false
 
 # Maintenance Engine
 
-Predictive maintenance engine condition prediction using a machine learning model hosted on the Hugging Face Model Hub.
+Predictive maintenance engine condition prediction using a model from the Hugging Face Model Hub.
