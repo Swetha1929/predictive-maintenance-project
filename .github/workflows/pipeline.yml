@@ -30,15 +30,23 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          set -e
           git config --global user.name "github-actions"
           git config --global user.email "github-actions@github.com"
 
-          rm -rf hf-space
-          git clone https://user:${HF_TOKEN}@huggingface.co/spaces/Swetha1929/maintenance-engine hf-space
+          rm -rf /tmp/hf-space
+          git clone "https://user:${HF_TOKEN}@huggingface.co/spaces/Swetha1929/maintenance-engine" /tmp/hf-space
 
-          rsync -av --delete --exclude='.git' --exclude='.github' ./ hf-space/
+          rsync -av --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude 'hf-space' \
+            --exclude '__pycache__' \
+            --exclude '.ipynb_checkpoints' \
+            --exclude '*.pyc' \
+            ./ /tmp/hf-space/
 
-          cd hf-space
-          git add .
+          cd /tmp/hf-space
+          git add -A
           git commit -m "Deploy from GitHub Actions" || true
           git push
