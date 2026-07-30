@@ -1,65 +1,77 @@
 import json
 import joblib
 import pandas as pd
-import streamlit as st
+import gradio as gr
 from huggingface_hub import hf_hub_download
 
+# Hugging Face Model Repository
 REPO_ID = "Swetha1929/predictive-maintenance-engine-model"
 
-st.set_page_config(page_title="Engine Condition Prediction", layout="wide")
-st.title("Engine Condition Prediction App")
-st.write("Enter the feature values below and click Predict.")
+# Load model
+model_path = hf_hub_download(
+    repo_id=REPO_ID,
+    filename="best_model.pkl"
+)
 
+feature_path = hf_hub_download(
+    repo_id=REPO_ID,
+    filename="feature_names.txt"
+)
 
-@st.cache_resource
-def load_artifacts():
-    model_path = hf_hub_download(repo_id=REPO_ID, filename="best_model.pkl")
-    feature_path = hf_hub_download(repo_id=REPO_ID, filename="feature_names.txt")
+model = joblib.load(model_path)
 
-    model = joblib.load(model_path)
+with open(feature_path, "r", encoding="utf-8") as f:
+    feature_names = [line.strip() for line in f if line.strip()]
 
-    with open(feature_path, "r", encoding="utf-8") as f:
-        feature_names = [line.strip() for line in f if line.strip()]
-
-    model_info = {}
-    try:
-        info_path = hf_hub_download(repo_id=REPO_ID, filename="model_info.json")
-        with open(info_path, "r", encoding="utf-8") as f:
-            model_info = json.load(f)
-    except Exception:
-        model_info = {}
-
-    return model, feature_names, model_info
-
-
+# Load model information (optional)
 try:
-    model, feature_names, model_info = load_artifacts()
-except Exception as e:
-    st.error(f"Error loading artifacts: {e}")
-    st.stop()
+    info_path = hf_hub_download(
+        repo_id=REPO_ID,
+        filename="model_info.json"
+    )
 
-if model_info:
-    st.caption(f"Best model: {model_info.get('best_model_name', 'Unknown')}")
-    st.caption(f"Test F1: {model_info.get('test_f1', 'N/A')}")
+    with open(info_path, "r", encoding="utf-8") as f:
+        model_info = json.load(f)
 
-inputs = {}
-cols = st.columns(2)
+except Exception:
+    model_info = {}
 
-for i, feature in enumerate(feature_names):
-    with cols[i % 2]:
-        inputs[feature] = st.number_input(
-            feature,
-            value=0.0,
-            step=1.0,
-            format="%.4f"
-        )
 
-if st.button("Predict"):
-    input_df = pd.DataFrame([inputs])
+def predict(*values):
+    input_df = pd.DataFrame([list(values)], columns=feature_names)
+
     prediction = model.predict(input_df)[0]
-    st.success(f"Predicted Engine Condition: {prediction}")
 
     if hasattr(model, "predict_proba"):
-        proba = model.predict_proba(input_df)
-        st.write("Prediction probabilities:")
-        st.dataframe(pd.DataFrame(proba))
+        probabilities = model.predict_proba(input_df)[0]
+
+        probability_dict = {
+            f"Class {i}": float(prob)
+            for i, prob in enumerate(probabilities)
+        }
+
+        return prediction, probability_dict
+
+    return prediction, {}
+
+
+# Create one input box for every feature
+inputs = [
+    gr.Number(label=feature)
+    for feature in feature_names
+]
+
+# Gradio Interface
+demo = gr.Interface(
+    fn=predict,
+    inputs=inputs,
+    outputs=[
+        gr.Textbox(label="Predicted Engine Condition"),
+        gr.Label(label="Prediction Probabilities")
+    ],
+    title="Engine Condition Prediction",
+    description="Enter the engine feature values to predict the engine condition."
+)
+
+# Launch application
+demo.launch()
