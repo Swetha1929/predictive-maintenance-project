@@ -1,6 +1,7 @@
-streamlit==1.46.1
-huggingface_hub==0.34.4
-joblib==1.4.2
-pandas==2.2.3
-numpy==2.2.2
-scikit-learn==1.6.1
+gradio==5.38.2
+huggingface_hub
+joblib
+pandas
+numpy
+scikit-learn
+spaces
